@@ -27,10 +27,16 @@ public class TrafficRecord {
 	}
 	
 	public void setStartTime(long time) {
+		if (time == 0) {
+			time = System.currentTimeMillis();
+		}
 		mStartTime = time;
 	}
 	
 	public void setEndTime(long time) {
+		if (time == 0) {
+			time = System.currentTimeMillis();
+		}
 		mEndTime = time;
 	}
 

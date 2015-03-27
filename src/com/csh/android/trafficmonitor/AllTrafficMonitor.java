@@ -1,7 +1,5 @@
 package com.csh.android.trafficmonitor;
 
-import java.util.HashMap;
-
 import android.content.Context;
 
 /**
@@ -27,21 +25,9 @@ public class AllTrafficMonitor extends TrafficMonitor {
 	}
 
 	@Override
-	public void checkTraffic(boolean ignore) {
-		HashMap<Integer, Long[]> trafficData = TrafficTool.getTrafficByPackage(
-				mContext, mMonitorPackage);
-
-		if (!ignore) {
-			if (mLastCheckTrafficCount == null) {
-				addTrafficRecord(0);
-			} else {
-				long increase = TrafficTool.computeIncrease(
-						mLastCheckTrafficCount, trafficData);
-				addTrafficRecord(increase);
-			}
-		}
-
-		mLastCheckTrafficCount = trafficData;
+	public boolean isExceptionalCase() {
+		return false;
 	}
 
+	
 }

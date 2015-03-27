@@ -31,7 +31,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	
 	protected Context mContext;
 	
-	private ITrafficMonitorCallback mTrafficMonitorCallback;
+	private OnTrafficOverflowListener mTrafficMonitorCallback;
 	
 	/**
 	 * 检查间隔时间
@@ -54,7 +54,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	private int mThreshold = 0;
 	
 	/**
-	 * 当前记录的数量
+	 * 当前记录的流量
 	 */
 	protected ArrayList<TrafficRecord> mTrafficRecordList;
 	
@@ -66,8 +66,6 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	private long mRecordStartTime;
 	
 	private long mRecordEndTime;
-	
-//	protected long mLastCheckTrafficCount;
 	
 	protected HashMap<Integer, Long[]> mLastCheckTrafficCount;
 	
@@ -103,7 +101,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 		}
 	}
 	
-	public void setTrafficMonitorCallback(ITrafficMonitorCallback callback) {
+	public void setOnTrafficOverflowListener(OnTrafficOverflowListener callback) {
 		mTrafficMonitorCallback = callback;
 	}
 	
@@ -179,11 +177,21 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 		
 		if (total >= mThreshold) {
 			clearTrafficRecords();
+			if (isExceptionalCase()) {
+				return;
+			}
 			if (mTrafficMonitorCallback != null) {
 				mTrafficMonitorCallback.onTrafficDataOverflow(total);
 			}
 		}
 	}
+	
+	/**
+	 * 检查是否是例外情况，如用户手动点击的下载
+	 * 
+	 * @return
+	 */
+	public abstract boolean isExceptionalCase();
 	
 	private void clearTrafficRecords() {
 		mTrafficRecordList.clear();
@@ -212,6 +220,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 		}
 		mHasStart = true;
 		checkTraffic(false);
+		
 		mRecordStartTime = System.currentTimeMillis();
 		scheduleNextCheck(mCheckInterval);
 	}
@@ -247,7 +256,10 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	}
 	
 	public void stop() {
-		
+		NetworkMonitorManager networkMonitorManager = NetworkMonitorManager.getInstance(mContext);
+		networkMonitorManager.removeNetworkChangeLisener(this);
+		mHandler.removeMessages(MSG_CHECK_TRAFFIC);
+		mTrafficRecordList.clear();
 	}
 	
 	/**
@@ -255,7 +267,22 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	 * 
 	 * @param ignore true 忽略本条记录， false 添加本条记录
 	 */
-	public abstract void checkTraffic(boolean ignore);
+	public void checkTraffic(boolean ignore) {
+		HashMap<Integer, Long[]> trafficData = TrafficTool.getTrafficByPackage(
+				mContext, mMonitorPackage);
+
+		if (!ignore) {
+			if (mLastCheckTrafficCount == null) {
+				addTrafficRecord(0);
+			} else {
+				long increase = TrafficTool.computeIncrease(
+						mLastCheckTrafficCount, trafficData);
+				addTrafficRecord(increase);
+			}
+		}
+
+		mLastCheckTrafficCount = trafficData;
+	}
 
 	@Override
 	public void onWifiActive() {
@@ -282,7 +309,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	 * 
 	 * @author chenshihang
 	 */
-	public interface ITrafficMonitorCallback {
+	public interface OnTrafficOverflowListener {
 		void onTrafficDataOverflow(long amount);
 	}
 
