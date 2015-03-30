@@ -46,7 +46,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 	/**
 	 * 阈值作用时间
 	 */
-	private long mInterval = 0;
+	protected long mInterval = 0;
 	
 	/**
 	 * 设定的阈值
@@ -97,7 +97,7 @@ public abstract class TrafficMonitor implements INetworkChangeLisener {
 		networkMonitorManager.registeNetworkChangeLisener(this);
 		
 		if (sDebug) {
-			mCheckInterval = 10 * 1000;
+			mCheckInterval = 5 * 60 * 1000;
 		}
 	}
 	

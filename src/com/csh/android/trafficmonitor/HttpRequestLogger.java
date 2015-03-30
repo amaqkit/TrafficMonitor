@@ -86,6 +86,8 @@ public class HttpRequestLogger {
 		final String separate = "||";
 		final String newLine = "\n";
 		StringBuffer buffer = new StringBuffer("");
+		buffer.append("流量异常日志");
+		buffer.append(newLine);
 		buffer.append("from:");
 		buffer.append(TimeUnit.longToStr(mStartTime, TimeUnit.LONG_FORMAT));
 		buffer.append(newLine);

@@ -18,6 +18,32 @@ import android.util.Log;
  */
 public class TrafficTool {
 	
+	/**
+	 * 启动流量监控，默认设定为30min内消耗超过30M流量就认为是异常
+	 * 
+	 * @param context
+	 * @return 返回监控器，可用于停止监控
+	 */
+	public static TrafficMonitor startMonit(final Context context) {
+		TrafficMonitor monitor = new MobileTrafficMonitor(context.getApplicationContext(), "com.gau.go.launcherex");
+		monitor.setThreshold(30 * 60 * 1000, 30 * 1000 * 1000);
+		monitor.setOnTrafficOverflowListener(new OnTrafficOverflowListener() {
+			
+			@Override
+			public void onTrafficDataOverflow(long amount) {
+				Log.w(TrafficMonitor.TAG, "onTrafficDataOverflow " + amount);
+				if (HttpRequestLogger.getInstance().isRunning()) {
+					return;
+				}
+				
+				HttpRequestLogTask task = new HttpRequestLogTask(context);
+				task.setInterval(10 * 60 * 1000).setTrafficAmount(amount).start();	
+			}
+		});
+		monitor.start();
+		return monitor;
+	}
+	
 	public static long computeIncrease(HashMap<Integer, Long[]> old, HashMap<Integer, Long[]> now) {
 		long total = 0;
 		if (old != null && now != null) {

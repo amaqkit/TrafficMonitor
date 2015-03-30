@@ -87,6 +87,6 @@ public class HttpRequestLogTask {
 		
 		//TODO send report
 		Log.i("CSH", "report --- " + buffer.toString());
-		
+		Toast.make(mContext, "traffic exception --- " + buffer.toString());
 	}
 }
